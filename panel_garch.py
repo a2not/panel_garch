@@ -227,6 +227,7 @@ class panel_garch:
         start = time.time()
 
         for j in range(self.iR):
+            print()
             print(j + 1, "th iteration")
 
             if DGP:
@@ -295,15 +296,8 @@ class panel_garch:
                 bounds=scipy.optimize.Bounds(self.lb, self.ub)
             )
 
-            if debug_print and result.success:
-                print("Optimizer exited successfully")
-                print("Description of the cause of the termination:")
-                print("\t=>", result.message)
-                print("Number of iteration performed by the optimizer:")
-                print("\t=>", result.nit)
-
-            if result.success == False:
-                print("Something went wrong whilst optimizing")
+            if debug_print:
+                print(result)
 
             vLambda_h = result.x
             fval = result.fun
@@ -311,15 +305,12 @@ class panel_garch:
             ll = -self.iT * fval
 
             if ll < -1e05 and debug_print:
-                print("xyzxyzxyzxyzxyzxyzxyzxyzxyz")
+                print("-self.iT * fval == ", ll, " < -1e05;  xyzxyzxyzxyzxyzxyzxyzxyzxyz")
 
             mR[j] = np.concatenate(
                 (vTheta_h.T, vAlpha_h.T, vSig_h.T, vLambda_h.T),
                 axis=None
             )
-
-            if debug_print:
-                print("__________end of an iteration_________")
 
         # if debug_print:
         print("Took {:.2f} s to complete".format(time.time() - start))
