@@ -19,7 +19,16 @@ def unvech(vX):
     return mX
 
 
+def test_unvech(vX):
+    print("before: ")
+    print(vX)
+    res = unvech(vX)
+    print("after: ")
+    print(res)
+    print()
+
+
 # test
-# print(unvech(np.array([[1, 2, 3, 1, 2, 1]]).T))
-# print(unvech(np.array([[1, 2, 3, 1, 2, 1]])))
-# print(unvech(np.array([[1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 2, 3, 1, 2, 1]]).T))
+test_unvech(np.array([[1, 2, 3, 1, 2, 1]]).T)
+test_unvech(np.array([[1, 2, 3, 1, 2, 1]]))
+test_unvech(np.array([[1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 2, 3, 1, 2, 1]]).T)
