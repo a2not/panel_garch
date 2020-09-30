@@ -211,8 +211,16 @@ class panel_garch:
                     ll = ll - 1e+16
                     break
 
-                ll = ll - 0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
-                    np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
+                try:
+                    ll = ll - 0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
+                        np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
+                except ValueError:
+                    print("ValueError at:")
+                    print("- 0.5 * math.log(np.linalg.det(mH)) - 0.5 * np.inner(mU[t], np.linalg.solve(mH, mU[t].T))")
+                    print("mH: ")
+                    print(mH)
+                    print("mU[t]; ")
+                    print(mU[t])
 
         ll += self.iT * (-0.5 * self.iN * math.log(2 * math.pi))
         obj = -ll / self.iT
