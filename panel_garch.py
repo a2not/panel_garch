@@ -207,6 +207,8 @@ class panel_garch:
                         np.dot(mC, np.outer(mU[t-1], mU[t-1])), mC) + np.dot(np.dot(mD, mH), mD)
                 _, mLam = np.linalg.eig(mH)
                 if min(np.diag(mLam)) < 0:
+                    print("min(np.diag(mLam)) == ", min(np.diag(mLam)))
+                    print(mLam)
                     ll = ll - 1e+16
                     break
 
@@ -227,9 +229,6 @@ class panel_garch:
         start = time.time()
 
         for j in range(self.iR):
-            print()
-            print(j + 1, "th iteration")
-
             if DGP:
                 mY0, mX0 = self.DataGeneratingProcess(iI=j)
             else:
@@ -297,22 +296,19 @@ class panel_garch:
             )
 
             if debug_print:
+                print()
+                print(j + 1, "th iteration")
                 print(result)
 
+                if -self.iT * result.fun < -1e05:
+                    print("-self.iT * result.fun == ", -self.iT * result.fun, " < -1e05;  xyzxyzxyzxyzxyzxyzxyzxyzxyz")
+
             vLambda_h = result.x
-            fval = result.fun
-
-            ll = -self.iT * fval
-
-            if ll < -1e05 and debug_print:
-                print("-self.iT * fval == ", ll, " < -1e05;  xyzxyzxyzxyzxyzxyzxyzxyzxyz")
-
             mR[j] = np.concatenate(
                 (vTheta_h.T, vAlpha_h.T, vSig_h.T, vLambda_h.T),
                 axis=None
             )
 
-        # if debug_print:
         print("Took {:.2f} s to complete".format(time.time() - start))
 
         np.set_printoptions(threshold=np.inf, linewidth=np.inf)
