@@ -208,7 +208,7 @@ class panel_garch:
                 _, mLam = np.linalg.eig(mH)
                 if min(np.diag(mLam)) < 0:
                     print("min(np.diag(mLam)) == ", min(np.diag(mLam)))
-                    print(mLam)
+                    # print(mLam)
                     ll = ll - 1e+16
                     break
 
@@ -229,6 +229,9 @@ class panel_garch:
         start = time.time()
 
         for j in range(self.iR):
+            if debug_print:
+                print(j + 1, "th iteration")
+
             if DGP:
                 mY0, mX0 = self.DataGeneratingProcess(iI=j)
             else:
@@ -296,12 +299,11 @@ class panel_garch:
             )
 
             if debug_print:
-                print()
-                print(j + 1, "th iteration")
                 print(result)
 
                 if -self.iT * result.fun < -1e05:
                     print("-self.iT * result.fun == ", -self.iT * result.fun, " < -1e05;  xyzxyzxyzxyzxyzxyzxyzxyzxyz")
+                print("______________________________________________________")
 
             vLambda_h = result.x
             mR[j] = np.concatenate(
