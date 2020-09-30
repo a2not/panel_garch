@@ -203,12 +203,11 @@ class panel_garch:
                 np.inner(mU[0], np.linalg.solve(mH, mU[0].T))
             for t in range(1, self.iT):
                 mH = mK + \
-                    np.dot(
-                        np.dot(mC, np.outer(mU[t-1], mU[t-1])), mC) + np.dot(np.dot(mD, mH), mD)
-                _, mLam = np.linalg.eig(mH)
-                if min(np.diag(mLam)) < 0:
-                    print("min(np.diag(mLam)) == ", min(np.diag(mLam)))
-                    # print(mLam)
+                    np.dot(np.dot(mC, np.outer(mU[t-1], mU[t-1])), mC) + \
+                    np.dot(np.dot(mD, mH), mD)
+                vLam, _ = np.linalg.eig(mH)
+                if min(vLam) < 0:
+                    print("t == ", t, ", min(vLam) == ", min(vLam))
                     ll = ll - 1e+16
                     break
 
