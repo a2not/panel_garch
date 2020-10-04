@@ -278,24 +278,6 @@ class panel_garch:
             mSig_h = (1 / self.iT) * np.dot(mU.T, mU)
             vSig_h = self.vech(mSig_h)
 
-            # happened in 350th iteration
-            # happened in 717th iteration
-            # Traceback (most recent call last):
-            # File "main.py", line 93, in <module>
-            #     result = scipy.optimize.minimize(
-            # File "C:\Users\Naoki\AppData\Local\Programs\Python\Python38-32\lib\site-packages\scipy\optimize\_minimize.py", line 609, in minimize
-            #     return _minimize_lbfgsb(fun, x0, args, jac, bounds,
-            # File "C:\Users\Naoki\AppData\Local\Programs\Python\Python38-32\lib\site-packages\scipy\optimize\lbfgsb.py", line 345, in _minimize_lbfgsb
-            #     f, g = func_and_grad(x)
-            # File "C:\Users\Naoki\AppData\Local\Programs\Python\Python38-32\lib\site-packages\scipy\optimize\lbfgsb.py", line 291, in func_and_grad
-            #     g = _approx_fprime_helper(x, fun, epsilon, args=args, f0=f)
-            # File "C:\Users\Naoki\AppData\Local\Programs\Python\Python38-32\lib\site-packages\scipy\optimize\optimize.py", line 697, in _approx_fprime_helper
-            #     df = (f(*((xk + d,) + args)) - f0) / d[k]
-            # File "C:\Users\Naoki\AppData\Local\Programs\Python\Python38-32\lib\site-packages\scipy\optimize\optimize.py", line 327, in function_wrapper
-            #     return function(*(wrapper_args + args))
-            # File "C:\Users\Naoki\Desktop\panel_garch_prog\python\src\Obj_pg.py", line 39, in Obj_pg
-            #     ll = ll - 0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
-            # ValueError: math domain error
             result = scipy.optimize.minimize(
                 fun=self.Obj_pg,
                 x0=vLambda_ini,
