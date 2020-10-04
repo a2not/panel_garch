@@ -12,6 +12,8 @@ class panel_garch:
         self.df = dataframe
         self.iT, self.iN = self.df.shape
 
+        self.eps = 1e-12
+
         if initial_vTheta == None:
             self.vTheta = np.array([[0.6, 1]]).T
         else:
@@ -207,20 +209,16 @@ class panel_garch:
                     np.dot(np.dot(mD, mH), mD)
                 vLam, _ = np.linalg.eig(mH)
                 if min(vLam) < 0:
-                    print("t == ", t, ", min(vLam) == ", min(vLam))
                     ll = ll - 1e+16
                     break
 
-                try:
-                    ll = ll - 0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
-                        np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
-                except ValueError:
-                    print("ValueError at:")
-                    print("- 0.5 * math.log(np.linalg.det(mH)) - 0.5 * np.inner(mU[t], np.linalg.solve(mH, mU[t].T))")
-                    print("mH: ")
-                    print(mH)
-                    print("mU[t]; ")
-                    print(mU[t])
+                if np.linalg.det(mH) < self.eps:
+                    ll = ll - 1e+16
+                    print("det(H) < eps")
+                    break
+
+                ll = ll - 0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
+                    np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
 
         ll += self.iT * (-0.5 * self.iN * math.log(2 * math.pi))
         obj = -ll / self.iT
