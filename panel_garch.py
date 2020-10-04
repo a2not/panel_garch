@@ -210,6 +210,7 @@ class panel_garch:
                 vLam, _ = np.linalg.eig(mH)
                 if min(vLam) < 0:
                     ll = ll - 1e+16
+                    print("min(vLam) < 0")
                     break
 
                 if np.linalg.det(mH) < self.eps:
