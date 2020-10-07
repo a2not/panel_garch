@@ -279,18 +279,40 @@ class panel_garch:
             mSig_h = (1 / self.iT) * np.dot(mU.T, mU)
             vSig_h = self.vech(mSig_h)
 
+            # constraints
+            # * Assumption 1
+            #   * 0 <=       gam - rho            (<= inf)
+            #   * 0 <=       gam + rho * (n - 1)  (<= inf)
+            #   * 0 <=    varphi - eta            (<= inf)
+            #   * 0 <=    varphi + eta * (n - 1)  (<= inf)
+            # * Assumption 4
+            #   * (-inf <=)    gam + rho < 1
+            #   * (-inf <=) varphi + eta < 1
+            cA = np.array([[1, -1, 0, 0],
+                           [1, self.iN - 1, 0, 0],
+                           [0, 0, 1, -1],
+                           [0, 0, 1, self.iN - 1],
+                           [1, 1, 0, 0],
+                           [0, 0, 1, 1]])
+            clb = np.array([0, 0, 0, 0, -np.inf, -np.inf]).T
+            crb = np.array([np.inf, np.inf, np.inf, np.inf,
+                            1 - self.eps, 1 - self.eps]).T
+            assumptions = scipy.optimize.LinearConstraint(cA, clb, crb)
+
             result = scipy.optimize.minimize(
                 fun=self.Obj_pg,
                 x0=vLambda_ini,
                 args=(mU, mSig_h),
-                bounds=scipy.optimize.Bounds(self.lb, self.ub)
+                bounds=scipy.optimize.Bounds(self.lb, self.ub),
+                constraints=assumptions
             )
 
             if debug_print:
                 print(result)
 
                 if -self.iT * result.fun < -1e05:
-                    print("-self.iT * result.fun == ", -self.iT * result.fun, " < -1e05;  xyzxyzxyzxyzxyzxyzxyzxyzxyz")
+                    print("-self.iT * result.fun == ", -self.iT *
+                          result.fun, " < -1e05;  xyzxyzxyzxyzxyzxyzxyzxyzxyz")
                 print("______________________________________________________")
 
             vLambda_h = result.x
