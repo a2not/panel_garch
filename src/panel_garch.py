@@ -49,7 +49,8 @@ class panel_garch:
                     self.vSigma[writer + j] = self.vS[j, 0]
         else:
             self.vSigma = initial_vSigma
-        assert self.vSigma.shape == (self.iN * (self.iN + 1) // 2, 1), "vSigma not size (iN * (iN + 1) // 2, 1)"
+        assert self.vSigma.shape == (
+            self.iN * (self.iN + 1) // 2, 1), "vSigma not size (iN * (iN + 1) // 2, 1)"
 
         if initial_vLambda == None:
             self.vLambda = np.array([[0.4, -0.1, 0.6, -0.2]]).T
@@ -92,7 +93,7 @@ class panel_garch:
             (gam - rho) * np.identity(self.iN)
         mD = np.full((self.iN, self.iN), eta) + \
             (varphi - eta) * np.identity(self.iN)
-        
+
         # Assumption 5
         mM = np.kron(mC, mC) + np.kron(mD, mD)
         vL = np.linalg.eigvals(mM)
@@ -173,7 +174,7 @@ class panel_garch:
         # epsilon_t is row vector with dimension of iN,
         # elements are generated with Norm(mu = 0, sd = 1)
         vU = np.dot(scipy.linalg.sqrtm(mSy),
-                np.random.normal(0, 1, (self.iN, 1)))
+                    np.random.normal(0, 1, (self.iN, 1)))
         mY[0] = vU.T + vMy.T
         # H_0 := mSig
         mH = mSig
@@ -185,7 +186,7 @@ class panel_garch:
 
             # Equation (5)
             vU = np.dot(scipy.linalg.sqrtm(mH),
-                    np.random.normal(0, 1, (self.iN, 1)))
+                        np.random.normal(0, 1, (self.iN, 1)))
             # Equation (4)
             mY[t] = self.vAlpha.T + (phi * mY[t-1]) + (beta * mX[t]) + vU.T
 
@@ -203,7 +204,7 @@ class panel_garch:
 
         # Definition (14)
         mK = mSig - np.dot(np.dot(mC, mSig), mC) - np.dot(np.dot(mD, mSig), mD)
-        
+
         # H_0 := mSig
         mH = mSig
 
@@ -236,7 +237,6 @@ class panel_garch:
                 # the next computation of log(det(mH)) will cause ValueError
                 # since log(0) is undefined
                 return 1e+16
-
 
         ll -= self.iN * self.iT * math.log(2 * math.pi)
         ll *= 0.5

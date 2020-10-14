@@ -25,10 +25,11 @@ def test_vech(mX):
     print(res)
     print()
 
+
 # test
 test_vech(np.ones((3, 3)))
 test_vech(np.array([[1, 2, 3],
-                   [2, 4, 2],
-                   [3, 21, 8]]))
+                    [2, 4, 2],
+                    [3, 21, 8]]))
 # fail case; non-symetric
 # test_vech(np.ones((2, 3)))

@@ -35,7 +35,6 @@ def DGP(vTheta, vAlpha, vSigma, vLambda, iT, iN, iI):
     vU = np.dot(np.random.normal(0, 1, iN), sqrtm(mSy))
     mY[0] = vU + vMy.T
     mH = mSig
-    
 
     for t in range(1, iT):
         mH = mK + np.dot(np.dot(mC, np.outer(vU, vU)), mC) + \

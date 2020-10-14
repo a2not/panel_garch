@@ -38,11 +38,11 @@ def Obj_pg(vLambda, mU, mSig):
 
             ll = ll - 0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
                 np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
-        
+
     iC = -0.5 * iN * math.log(2 * math.pi)
     ll += iT * iC
     obj = -ll / iT
     if abs(np.imag(obj)) > 0:
         obj = 1e+16
-        
+
     return obj

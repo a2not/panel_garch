@@ -31,16 +31,15 @@ def parser(vTheta, vAlpha, vSigma, vLambda, iT, iN, dataframe):
     vU = np.dot(np.random.normal(0, 1, iN), sqrtm(mSy))
     mY[0] = vU + vMy.T
     mH = mSig
-    
 
     for t in range(1, iT):
         # Equation (18)
         mH = mK + np.dot(np.dot(mC, np.outer(vU, vU)), mC) + \
             np.dot(np.dot(mD, mH), mD)
-        
+
         # Equation (5)
         vU = np.dot(np.random.normal(0, 1, iN), sqrtm(mH))
-        
+
         # Equation (4)
         mY[t] = vAlpha.T + (phi * mY[t-1]) + (beta * mX[t]) + vU
 
