@@ -4,7 +4,7 @@ import time
 import math
 import random
 import scipy.optimize
-from . import unvech, vech, Obj_pg, DGP
+from . import unvech, vech, Obj_pg, DGP, radius
 
 
 class panel_garch:
@@ -72,23 +72,7 @@ class panel_garch:
         return unvech.unvech(vX)
 
     def spectralRadiusOfKroneckers(self, vLambda):
-        assert vLambda.shape == (4, 1), "vLambda not size (4, 1)"
-        gam, rho, varphi, eta = vLambda
-
-        # Definition (13)
-        mC = np.full((self.iN, self.iN), rho) + \
-            (gam - rho) * np.identity(self.iN)
-        mD = np.full((self.iN, self.iN), eta) + \
-            (varphi - eta) * np.identity(self.iN)
-
-        # Assumption 5
-        mM = np.kron(mC, mC) + np.kron(mD, mD)
-        vL = np.linalg.eigvals(mM)
-
-        radius = max(abs(vL))
-        print(radius)
-
-        return radius
+        return radius.spectralRadiusOfKroneckers(self.iN, vLambda)
 
     def DataGeneratingProcess(self, iI=0):
         return DGP.DGP(self.vTheta, self.vAlpha, self.vSigma, self.vLambda, self.iT, self.iN, iI)
