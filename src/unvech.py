@@ -4,6 +4,7 @@ import numpy as np
 
 
 def unvech(vX):
+    # unvech column vector to a Toeplitz matrix
     if len(vX) < len(vX.T):
         vX = vX.T
 
@@ -28,7 +29,8 @@ def test_unvech(vX):
     print()
 
 
-# test
-test_unvech(np.array([[1, 2, 3, 1, 2, 1]]).T)
-test_unvech(np.array([[1, 2, 3, 1, 2, 1]]))
-test_unvech(np.array([[1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 2, 3, 1, 2, 1]]).T)
+if __name__ == "__main__":
+    # test
+    test_unvech(np.array([[1, 2, 3, 1, 2, 1]]).T)
+    test_unvech(np.array([[1, 2, 3, 1, 2, 1]]))
+    test_unvech(np.array([[1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 2, 3, 1, 2, 1]]).T)

@@ -4,6 +4,7 @@ import time
 import math
 import random
 import scipy.optimize
+from . import unvech
 
 
 class panel_garch:
@@ -80,20 +81,7 @@ class panel_garch:
         return vH
 
     def unvech(self, vX):
-        # unvech column vector to a Toeplitz matrix
-        if len(vX) < len(vX.T):
-            vX = vX.T
-
-        iN = round(0.5 * ((-1 + (1 + 8 * len(vX)) ** 0.5)))
-
-        mX = np.zeros((iN, iN))
-
-        for i in range(iN):
-            for j in range(iN - i):
-                mX[j][j + i] = vX[i]
-                mX[j + i][j] = vX[i]
-
-        return mX
+        return unvech.unvech(vX)
 
     def spectralRadiusOfKroneckers(self, vLambda):
         assert vLambda.shape == (4, 1), "vLambda not size (4, 1)"
