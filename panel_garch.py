@@ -12,22 +12,26 @@ class panel_garch:
         self.df = dataframe
         self.iT, self.iN = self.df.shape
 
+        self.eps = 1e-12
+
         if initial_vTheta == None:
             self.vTheta = np.array([[0.6, 1]]).T
         else:
             self.vTheta = initial_vTheta
-        assert len(self.vTheta) == 2, "vTheta not length 2"
+        assert self.vTheta.shape == (2, 1), "vTheta not size (2, 1)"
 
         if initial_vAlpha == None:
             self.vAlpha = np.array(
                 [[(1 / self.iN) * num for num in range(1, self.iN + 1)]]).T
         else:
             self.vAlpha = initial_vAlpha
+        assert self.vAlpha.shape == (self.iN, 1), "vAlpha not size (iN, 1)"
 
         if initial_vS == None:
             self.vS = np.array([[(-0.4)**i for i in range(self.iN)]]).T
         else:
             self.vS = initial_vS
+        assert self.vS.shape == (self.iN, 1), "vS not size (iN, 1)"
 
         if initial_vSigma == None:
             self.vSigma = np.zeros((self.iN * (self.iN + 1) // 2, 1))
@@ -44,20 +48,17 @@ class panel_garch:
                     self.vSigma[writer + j] = self.vS[j, 0]
         else:
             self.vSigma = initial_vSigma
+        assert self.vSigma.shape == (self.iN * (self.iN + 1) // 2, 1), "vSigma not size (iN * (iN + 1) // 2, 1)"
 
         if initial_vLambda == None:
             self.vLambda = np.array([[0.4, -0.1, 0.6, -0.2]]).T
         else:
             self.vLambda = initial_vLambda
-        assert len(self.vLambda) == 4, "vLambda not length 4"
+        assert self.vLambda.shape == (4, 1), "vLambda not size (4, 1)"
 
         self.vPsi = np.concatenate(
             (self.vTheta, self.vAlpha, self.vSigma, self.vLambda), axis=0)
         self.iP = len(self.vPsi)
-
-        self.iC = 1 - 1e-6
-        self.lb = np.full((4, 1), -self.iC)
-        self.ub = np.full((4, 1), self.iC)
 
         if iR == None:
             self.iR = 20
@@ -67,7 +68,7 @@ class panel_garch:
     def vech(self, mX):
         # take vech operation on d*d symmetric matrix and return (d*(d+1) / 2) dimension column vecto
         n, check = mX.shape
-        assert n == check, "vech operation on an non-symmetric matrix"
+        assert n == check, "vech operation on a non-symmetric matrix"
 
         vH = np.zeros(((n * (n + 1)) // 2, 1))
         writer = 0
@@ -94,6 +95,25 @@ class panel_garch:
 
         return mX
 
+    def spectralRadiusOfKroneckers(self, vLambda):
+        assert vLambda.shape == (4, 1), "vLambda not size (4, 1)"
+        gam, rho, varphi, eta = vLambda
+
+        # Definition (13)
+        mC = np.full((self.iN, self.iN), rho) + \
+            (gam - rho) * np.identity(self.iN)
+        mD = np.full((self.iN, self.iN), eta) + \
+            (varphi - eta) * np.identity(self.iN)
+        
+        # Assumption 5
+        mM = np.kron(mC, mC) + np.kron(mD, mD)
+        vL = np.linalg.eigvals(mM)
+
+        radius = max(abs(vL))
+        print(radius)
+
+        return radius
+
     def DataGeneratingProcess(self, iI=0):
         # > "Python uses the Mersenne Twister as the core generator."
         # > https://docs.python.org/2/library/random.html
@@ -103,32 +123,36 @@ class panel_garch:
         gam, rho, varphi, eta = self.vLambda
         mSig = self.unvech(self.vSigma)
 
-        # Definition (7)
+        # Definition (13)
         mC = np.full((self.iN, self.iN), rho) + \
             (gam - rho) * np.identity(self.iN)
         mD = np.full((self.iN, self.iN), eta) + \
             (varphi - eta) * np.identity(self.iN)
 
-        # Equation (11)
+        # Equation (14)
         mK = mSig - np.dot(np.dot(mC, mSig), mC) - np.dot(np.dot(mD, mSig), mD)
 
         # Matrix with size (iT * iN), elements are generated with Uniform dist over [0, 1)
         mX = np.random.rand(self.iT, self.iN)
 
-        # Equation (16) ??
+        # Equation (15)
         vMy = (1 / (1 - phi)) * (0.5 + self.vAlpha)
         mSy = (1 / (1 - phi ** 2))*((1/12) + mSig)
 
         # Definition (4)
         mY = np.zeros((self.iT, self.iN))
-        # Definition (5)
+
+        # Definition (16)
         vU = np.dot(np.random.normal(0, 1, self.iN), scipy.linalg.sqrtm(mSy))
         mY[0] = vU + vMy.T
         mH = mSig
 
         for t in range(1, self.iT):
+            # Definition (12)
             mH = mK + np.dot(np.dot(mC, np.outer(vU, vU)), mC) + \
                 np.dot(np.dot(mD, mH), mD)
+
+            # Definition (16)
             vU = np.dot(np.random.normal(0, 1, self.iN),
                         scipy.linalg.sqrtm(mH))
             mY[t] = self.vAlpha.T + (phi * mY[t-1]) + (beta * mX[t]) + vU
@@ -141,13 +165,13 @@ class panel_garch:
         gam, rho, varphi, eta = self.vLambda
         mSig = self.unvech(self.vSigma)
 
-        # Definition (7)
+        # Definition (13)
         mC = np.full((self.iN, self.iN), rho) + \
             (gam - rho) * np.identity(self.iN)
         mD = np.full((self.iN, self.iN), eta) + \
             (varphi - eta) * np.identity(self.iN)
 
-        # Equation (11)
+        # Equation (14)
         mK = mSig - np.dot(np.dot(mC, mSig), mC) - np.dot(np.dot(mD, mSig), mD)
 
         # Data Matrix with size (iT * iN)
@@ -157,9 +181,13 @@ class panel_garch:
 
         mY = np.zeros((self.iT, self.iN))
 
-        # Row vector with dimension of iN, elements are generated with Norm(mu = 0, sd = 1)
-        vU = np.dot(np.random.normal(0, 1, self.iN), scipy.linalg.sqrtm(mSy))
-        mY[0] = vU + vMy.T
+        # Equation (5)
+        # epsilon_t is row vector with dimension of iN,
+        # elements are generated with Norm(mu = 0, sd = 1)
+        vU = np.dot(scipy.linalg.sqrtm(mSy),
+                np.random.normal(0, 1, (self.iN, 1)))
+        mY[0] = vU.T + vMy.T
+        # H_0 := mSig
         mH = mSig
 
         for t in range(1, self.iT):
@@ -168,58 +196,68 @@ class panel_garch:
                 np.dot(np.dot(mD, mH), mD)
 
             # Equation (5)
-            vU = np.dot(np.random.normal(0, 1, self.iN),
-                        scipy.linalg.sqrtm(mH))
-
+            vU = np.dot(scipy.linalg.sqrtm(mH),
+                    np.random.normal(0, 1, (self.iN, 1)))
             # Equation (4)
-            mY[t] = self.vAlpha.T + (phi * mY[t-1]) + (beta * mX[t]) + vU
+            mY[t] = self.vAlpha.T + (phi * mY[t-1]) + (beta * mX[t]) + vU.T
 
         return mY, mX
 
     def Obj_pg(self, vLambda, mU, mSig):
-        self.iT, self.iN = mU.shape
+        assert mU.shape == (self.iT, self.iN), "mU not size (iT, iN)"
         gam, rho, varphi, eta = vLambda
 
+        # Definition (13)
         mC = np.full((self.iN, self.iN), rho) + \
             (gam - rho) * np.identity(self.iN)
         mD = np.full((self.iN, self.iN), eta) + \
             (varphi - eta) * np.identity(self.iN)
 
+        # Definition (14)
         mK = mSig - np.dot(np.dot(mC, mSig), mC) - np.dot(np.dot(mD, mSig), mD)
+        
+        # H_0 := mSig
         mH = mSig
-        mCs = np.kron(mC, mC)
-        mDs = np.kron(mD, mD)
 
-        _, mL = np.linalg.eig(mCs + mDs)
-        vL1 = np.diag(mL)
-        _, mL = np.linalg.eig(mK)
-        vL2 = np.diag(mL)
+        # H_t is positive definite if K and H_0 are
+        vL = np.linalg.eigvals(mK)
+        if (abs(vL) > 1).sum() > 0:
+            return 1e+16
+        vL = np.linalg.eigvals(mH)
+        if (abs(vL) > 1).sum() > 0:
+            return 1e+16
 
-        iL = (abs(vL1) > 1).sum() + (abs(vL2) > 1).sum()
-        if iL > 0:
-            ll = -1e+16
-        else:
-            ll = -0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
-                np.inner(mU[0], np.linalg.solve(mH, mU[0].T))
-            for t in range(1, self.iT):
-                mH = mK + \
-                    np.dot(np.dot(mC, np.outer(mU[t-1], mU[t-1])), mC) + \
-                    np.dot(np.dot(mD, mH), mD)
-                vLam, _ = np.linalg.eig(mH)
-                if min(vLam) < 0:
-                    print("t == ", t, ", min(vLam) == ", min(vLam))
-                    ll = ll - 1e+16
-                    break
+        ll = 0
+        for t in range(self.iT):
+            # Equation (22)
+            ll -= math.log(np.linalg.det(mH)) - \
+                np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
 
-                ll = ll - 0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
-                    np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
+            # Equation (17)
+            mH = mK + \
+                np.dot(np.dot(mC, np.outer(mU[t], mU[t])), mC) + \
+                np.dot(np.dot(mD, mH), mD)
 
-        ll += self.iT * (-0.5 * self.iN * math.log(2 * math.pi))
-        obj = -ll / self.iT
-        if abs(np.imag(obj)) > 0:
-            obj = 1e+16
+            # check if H_t is not positive definite
+            vLam = np.linalg.eigvals(mH)
+            if min(vLam) <= 0:
+                return 1e+16
 
-        return obj
+            # check if det(mH) == 0 (linearly dependent)
+            if np.linalg.det(mH) < self.eps:
+                # the next computation of log(det(mH)) will cause ValueError
+                # since log(0) is undefined
+                return 1e+16
+
+
+        ll -= self.iN * self.iT * math.log(2 * math.pi)
+        ll *= 0.5
+        if abs(np.imag(ll)) > 0:
+            return 1e+16
+
+        # maximizing f(x) <=> minimizing -f(x)
+        print("obj func runs successfully")
+        return -ll
 
     def run(self, debug_print=False, DGP=True):
         mR = np.zeros((self.iR, self.iP))
@@ -272,36 +310,33 @@ class panel_garch:
             mSig_h = (1 / self.iT) * np.dot(mU.T, mU)
             vSig_h = self.vech(mSig_h)
 
-            # happened in 350th iteration
-            # happened in 717th iteration
-            # Traceback (most recent call last):
-            # File "main.py", line 93, in <module>
-            #     result = scipy.optimize.minimize(
-            # File "C:\Users\Naoki\AppData\Local\Programs\Python\Python38-32\lib\site-packages\scipy\optimize\_minimize.py", line 609, in minimize
-            #     return _minimize_lbfgsb(fun, x0, args, jac, bounds,
-            # File "C:\Users\Naoki\AppData\Local\Programs\Python\Python38-32\lib\site-packages\scipy\optimize\lbfgsb.py", line 345, in _minimize_lbfgsb
-            #     f, g = func_and_grad(x)
-            # File "C:\Users\Naoki\AppData\Local\Programs\Python\Python38-32\lib\site-packages\scipy\optimize\lbfgsb.py", line 291, in func_and_grad
-            #     g = _approx_fprime_helper(x, fun, epsilon, args=args, f0=f)
-            # File "C:\Users\Naoki\AppData\Local\Programs\Python\Python38-32\lib\site-packages\scipy\optimize\optimize.py", line 697, in _approx_fprime_helper
-            #     df = (f(*((xk + d,) + args)) - f0) / d[k]
-            # File "C:\Users\Naoki\AppData\Local\Programs\Python\Python38-32\lib\site-packages\scipy\optimize\optimize.py", line 327, in function_wrapper
-            #     return function(*(wrapper_args + args))
-            # File "C:\Users\Naoki\Desktop\panel_garch_prog\python\src\Obj_pg.py", line 39, in Obj_pg
-            #     ll = ll - 0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
-            # ValueError: math domain error
+            # bound on parameters x
+            iC = 1 - 1e-6
+            lb = np.full((4, 1), -iC)
+            ub = np.full((4, 1), iC)
+
+            # constraints: Assumption 5
+            # the spectrum radius of kron(C, C) + kron(D, D) <= 1
+            assumptions = scipy.optimize.NonlinearConstraint(
+                fun=self.spectralRadiusOfKroneckers,
+                lb=-np.inf,
+                ub=1
+            )
+
             result = scipy.optimize.minimize(
                 fun=self.Obj_pg,
                 x0=vLambda_ini,
                 args=(mU, mSig_h),
-                bounds=scipy.optimize.Bounds(self.lb, self.ub)
+                bounds=scipy.optimize.Bounds(lb, ub),
+                constraints=assumptions
             )
 
             if debug_print:
                 print(result)
 
                 if -self.iT * result.fun < -1e05:
-                    print("-self.iT * result.fun == ", -self.iT * result.fun, " < -1e05;  xyzxyzxyzxyzxyzxyzxyzxyzxyz")
+                    print("-self.iT * result.fun == ", -self.iT *
+                          result.fun, " < -1e05;  xyzxyzxyzxyzxyzxyzxyzxyzxyz")
                 print("______________________________________________________")
 
             vLambda_h = result.x
