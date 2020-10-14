@@ -4,7 +4,7 @@ import time
 import math
 import random
 import scipy.optimize
-from . import unvech
+from . import unvech, vech
 
 
 class panel_garch:
@@ -68,18 +68,7 @@ class panel_garch:
             self.iR = iR
 
     def vech(self, mX):
-        # take vech operation on d*d symmetric matrix and return (d*(d+1) / 2) dimension column vecto
-        n, check = mX.shape
-        assert n == check, "vech operation on a non-symmetric matrix"
-
-        vH = np.zeros(((n * (n + 1)) // 2, 1))
-        writer = 0
-        for i in range(n):
-            for j in range(i, n):
-                vH[writer] = mX[j][i]
-                writer += 1
-
-        return vH
+        return vech.vech(mX)
 
     def unvech(self, vX):
         return unvech.unvech(vX)
