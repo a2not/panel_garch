@@ -35,7 +35,6 @@ def DGP(vTheta, vAlpha, vSigma, vLambda, iT, iN, iI, mX):
 
     # Definition (4)
     mY = np.zeros((iT, iN, 1))
-    print(mY[0].shape)
 
     # Definition (16)
     # Column vector with dimension of iN, elements are generated with Norm(mu = 0, sd = 1)
