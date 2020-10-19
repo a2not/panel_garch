@@ -108,7 +108,6 @@ class panel_garch:
                     mZ[i][j][1] = mX0[i][j]
 
             mZb = np.mean(mZ, axis=0)
-            print(mZb)
 
             # Z^{tilde} := Z - Z^{bar}
             mZt = np.zeros((self.iT, self.iN, 2))
