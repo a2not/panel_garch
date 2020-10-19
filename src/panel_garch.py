@@ -98,27 +98,33 @@ class panel_garch:
                 # X is obtained from the dataframe
                 mY0, mX0 = self.DataGeneratingProcess(iI=j, df=self.df)
 
-            # mY = mY0#[1:]
-            # mX = mX0#[1:]
-            print(mY0.shape, mX0.shape)
+            # mZ = np.dstack((mY0, mX0))
+            # Equation (6); z_{i, t} := (y_{i, t-1}, x_{i, t})
             mZ = np.zeros((self.iT, self.iN, 2))
+            for i in range(self.iT):
+                for j in range(self.iN):
+                    if i - 1 >= 0:
+                        mZ[i][j][0] = mY0[i-1][j]
+                    mZ[i][j][1] = mX0[i][j]
 
-            mZ[0] = mY0  # [:len(mY0) - 1]
-            mZ[1] = mX0
+            mZb = np.mean(mZ, axis=0)
+            print(mZb)
 
-            mZb = np.mean(mZ, axis=1)
-            mZt = np.zeros((2, self.iT, self.iN))
+            # Z^{tilde} := Z - Z^{bar}
+            mZt = np.zeros((self.iT, self.iN, 2))
+            for i in range(self.iT):
+                mZt[i] = mZ[i] - mZb
 
-            mZt[0] = mZ[0] - np.outer(np.ones(self.iT), mZb[0])
-            mZt[1] = mZ[1] - np.outer(np.ones(self.iT), mZb[1])
-
+            # Y^{bar} := E[ Y_t ]
             vYb = np.mean(mY0, axis=0)
+            mYt = np.resize(mY0, (self.iT, self.iN)) - np.outer(np.ones(self.iT), vYb)
+
+            # Assumption 1 (c); plim Q^{bar}_
             mQ = np.zeros((2, 2))
             vQ = np.zeros(2)
-            mYt = mY0 - np.outer(np.ones(self.iT), vYb)
 
             for i in range(self.iN):
-                mQ1 = np.reshape(mZt[:, :, i], (self.iT, 2))
+                mQ1 = np.reshape(mZt[:, i, :], (self.iT, 2))
                 mQ += np.dot(mQ1.T, mQ1)
                 vQ += np.dot(mQ1.T, mYt[:, i])
 
@@ -142,18 +148,18 @@ class panel_garch:
 
             # constraints: Assumption 5
             # the spectrum radius of kron(C, C) + kron(D, D) <= 1
-            assumptions = scipy.optimize.NonlinearConstraint(
-                fun=self.spectralRadiusOfKroneckers,
-                lb=-np.inf,
-                ub=1
-            )
+            # assumptions = scipy.optimize.NonlinearConstraint(
+            #     fun=self.spectralRadiusOfKroneckers,
+            #     lb=np.array(-np.inf),
+            #     ub=np.array(1)
+            # )
 
             result = scipy.optimize.minimize(
                 fun=self.Obj_pg,
                 x0=vLambda_ini,
                 args=(mU, mSig_h),
-                bounds=scipy.optimize.Bounds(lb, ub),
-                constraints=assumptions
+                bounds=scipy.optimize.Bounds(lb, ub)
+                # constraints=assumptions
             )
 
             if debug_print:

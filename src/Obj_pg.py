@@ -5,7 +5,9 @@ import math
 
 
 def Obj_pg(iN, iT, vLambda, mU, mSig):
+    assert vLambda.shape == (4,), "vLambda not size (4,)"
     assert mU.shape == (iT, iN), "mU not size (iT, iN)"
+    assert mSig.shape == (iN, iN), "mSig not size (iN, iN)"
     gam, rho, varphi, eta = vLambda
 
     # Definition (13)
@@ -20,12 +22,14 @@ def Obj_pg(iN, iT, vLambda, mU, mSig):
     # H_0 := mSig
     mH = mSig
 
+    # This depends on the initial vals of mSig
+    # print(np.linalg.eigvals(mK))
+    # print(np.linalg.eigvals(mH))
+
     # H_t is positive definite if K and H_0 are
-    vL = np.linalg.eigvals(mK)
-    if (abs(vL) > 1).sum() > 0:
+    if np.any(np.linalg.eigvals(mK) <= 0):
         return 1e+16
-    vL = np.linalg.eigvals(mH)
-    if (abs(vL) > 1).sum() > 0:
+    if np.any(np.linalg.eigvals(mH) <= 0):
         return 1e+16
 
     ll = 0
