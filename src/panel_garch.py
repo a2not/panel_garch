@@ -12,6 +12,7 @@ class panel_garch:
     def __init__(self, dataframe, initial_vTheta=None, initial_vAlpha=None, initial_vS=None, initial_vSigma=None, initial_vLambda=None, iR=None):
         self.df = dataframe
         self.iT, self.iN = self.df.shape
+        self.df = np.resize(self.df, (self.iT, self.iN, 1))
 
         if initial_vTheta == None:
             self.vTheta = np.array([[0.6, 1]]).T
@@ -99,7 +100,8 @@ class panel_garch:
 
             # mY = mY0#[1:]
             # mX = mX0#[1:]
-            mZ = np.zeros((2, self.iT, self.iN))
+            print(mY0.shape, mX0.shape)
+            mZ = np.zeros((self.iT, self.iN, 2))
 
             mZ[0] = mY0  # [:len(mY0) - 1]
             mZ[1] = mX0

@@ -50,6 +50,6 @@ def DGP(vTheta, vAlpha, vSigma, vLambda, iT, iN, iI, mX):
 
         # Definition (16)
         vU = np.dot(sqrtm(mH), np.random.normal(0, 1, (iN, 1)))
-        mY[t] = vAlpha + (phi * mY[t-1]) + (beta * np.resize(mX[t], (iN, 1))) + vU
+        mY[t] = vAlpha + (phi * mY[t-1]) + (beta * mX[t]) + vU
 
     return mY, mX
