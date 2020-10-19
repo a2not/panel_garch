@@ -74,52 +74,8 @@ class panel_garch:
     def spectralRadiusOfKroneckers(self, vLambda):
         return radius.spectralRadiusOfKroneckers(self.iN, vLambda)
 
-    def DataGeneratingProcess(self, iI=0):
-        return DGP.DGP(self.vTheta, self.vAlpha, self.vSigma, self.vLambda, self.iT, self.iN, iI)
-
-    def parser(self):
-
-        phi, beta = self.vTheta
-        gam, rho, varphi, eta = self.vLambda
-        mSig = self.unvech(self.vSigma)
-
-        # Definition (13)
-        mC = np.full((self.iN, self.iN), rho) + \
-            (gam - rho) * np.identity(self.iN)
-        mD = np.full((self.iN, self.iN), eta) + \
-            (varphi - eta) * np.identity(self.iN)
-
-        # Equation (14)
-        mK = mSig - np.dot(np.dot(mC, mSig), mC) - np.dot(np.dot(mD, mSig), mD)
-
-        # Data Matrix with size (iT * iN)
-        mX = self.df
-        vMy = (1 / (1 - phi)) * (0.5 + self.vAlpha)
-        mSy = (1 / (1 - phi ** 2))*((1/12) + mSig)
-
-        mY = np.zeros((self.iT, self.iN))
-
-        # Equation (5)
-        # epsilon_t is row vector with dimension of iN,
-        # elements are generated with Norm(mu = 0, sd = 1)
-        vU = np.dot(scipy.linalg.sqrtm(mSy),
-                    np.random.normal(0, 1, (self.iN, 1)))
-        mY[0] = vU.T + vMy.T
-        # H_0 := mSig
-        mH = mSig
-
-        for t in range(1, self.iT):
-            # Equation (18)
-            mH = mK + np.dot(np.dot(mC, np.outer(vU, vU)), mC) + \
-                np.dot(np.dot(mD, mH), mD)
-
-            # Equation (5)
-            vU = np.dot(scipy.linalg.sqrtm(mH),
-                        np.random.normal(0, 1, (self.iN, 1)))
-            # Equation (4)
-            mY[t] = self.vAlpha.T + (phi * mY[t-1]) + (beta * mX[t]) + vU.T
-
-        return mY, mX
+    def DataGeneratingProcess(self, iI=0, df=None):
+        return DGP.DGP(self.vTheta, self.vAlpha, self.vSigma, self.vLambda, self.iT, self.iN, iI, df)
 
     def Obj_pg(self, vLambda, mU, mSig):
         Obj_pg.Obj_pg(self.iN, self.iT, vLambda, mU, mSig)
@@ -135,9 +91,11 @@ class panel_garch:
                 print(j + 1, "th iteration")
 
             if DGP:
+                # The Date Matrix X with size (iT * iN), elements are generated with Uniform dist over [0, 1)
                 mY0, mX0 = self.DataGeneratingProcess(iI=j)
             else:
-                mY0, mX0 = self.parser()
+                # X is obtained from the dataframe
+                mY0, mX0 = self.DataGeneratingProcess(iI=j, df=self.df)
 
             # mY = mY0#[1:]
             # mX = mX0#[1:]

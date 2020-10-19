@@ -1,40 +1,46 @@
 import numpy as np
 import random
-import scipy
+from scipy.linalg import sqrtm
 from .unvech import unvech
 
 
-def DGP(vTheta, vAlpha, vSigma, vLambda, iT, iN, iI):
+def DGP(vTheta, vAlpha, vSigma, vLambda, iT, iN, iI, mX):
     # > "Python uses the Mersenne Twister as the core generator."
     # > https://docs.python.org/2/library/random.html
     random.seed(123 + 2 * iI)
 
+    # Matrix with size (iT * iN), elements are generated with Uniform dist over [0, 1)
+    if mX is None:
+        mX = np.random.rand(iT, iN, 1)
+
+    assert vTheta.shape == (2, 1), "vTheta not size (2, 1)"
     phi, beta = vTheta
+    assert vLambda.shape == (4, 1), "vLambda not size (4, 1)"
     gam, rho, varphi, eta = vLambda
+    assert vSigma.shape == (
+        iN * (iN + 1) // 2, 1), "vSigma not size (iN * (iN + 1) // 2, 1)"
     mSig = unvech(vSigma)
+    assert mSig.shape == (iN, iN), "mSig not size (iN, iN)"
 
     # Definition (13)
-    mC = np.full((iN, iN), rho) + \
-        (gam - rho) * np.identity(iN)
-    mD = np.full((iN, iN), eta) + \
-        (varphi - eta) * np.identity(iN)
+    mC = np.full((iN, iN), rho) + (gam - rho) * np.identity(iN)
+    mD = np.full((iN, iN), eta) + (varphi - eta) * np.identity(iN)
 
     # Equation (14)
     mK = mSig - np.dot(np.dot(mC, mSig), mC) - np.dot(np.dot(mD, mSig), mD)
-
-    # Matrix with size (iT * iN), elements are generated with Uniform dist over [0, 1)
-    mX = np.random.rand(iT, iN)
 
     # Equation (15)
     vMy = (1 / (1 - phi)) * (0.5 + vAlpha)
     mSy = (1 / (1 - phi ** 2))*((1/12) + mSig)
 
     # Definition (4)
-    mY = np.zeros((iT, iN))
+    mY = np.zeros((iT, iN, 1))
+    print(mY[0].shape)
 
     # Definition (16)
-    vU = np.dot(np.random.normal(0, 1, iN), scipy.linalg.sqrtm(mSy))
-    mY[0] = vU + vMy.T
+    # Column vector with dimension of iN, elements are generated with Norm(mu = 0, sd = 1)
+    vU = np.dot(sqrtm(mSy), np.random.normal(0, 1, (iN, 1)))
+    mY[0] = vU + vMy
     mH = mSig
 
     for t in range(1, iT):
@@ -43,8 +49,7 @@ def DGP(vTheta, vAlpha, vSigma, vLambda, iT, iN, iI):
             np.dot(np.dot(mD, mH), mD)
 
         # Definition (16)
-        vU = np.dot(np.random.normal(0, 1, iN),
-                    scipy.linalg.sqrtm(mH))
-        mY[t] = vAlpha.T + (phi * mY[t-1]) + (beta * mX[t]) + vU
+        vU = np.dot(sqrtm(mH), np.random.normal(0, 1, (iN, 1)))
+        mY[t] = vAlpha + (phi * mY[t-1]) + (beta * np.resize(mX[t], (iN, 1))) + vU
 
     return mY, mX
