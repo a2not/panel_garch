@@ -4,45 +4,61 @@ import math
 # function obj = Obj_pg(vLambda,mU,mSig)
 
 
-def Obj_pg(vLambda, mU, mSig):
-    iT, iN = mU.shape
+def Obj_pg(iN, iT, vLambda, mU, mSig):
+    assert vLambda.shape == (4,), "vLambda not size (4,)"
+    assert mU.shape == (iT, iN), "mU not size (iT, iN)"
+    assert mSig.shape == (iN, iN), "mSig not size (iN, iN)"
     gam, rho, varphi, eta = vLambda
 
-    mC = np.full((iN, iN), rho) + (gam - rho) * np.identity(iN)
-    mD = np.full((iN, iN), eta) + (varphi - eta) * np.identity(iN)
+    # Definition (13)
+    mC = np.full((iN, iN), rho) + \
+        (gam - rho) * np.identity(iN)
+    mD = np.full((iN, iN), eta) + \
+        (varphi - eta) * np.identity(iN)
 
+    # Definition (14)
     mK = mSig - np.dot(np.dot(mC, mSig), mC) - np.dot(np.dot(mD, mSig), mD)
+
+    # H_0 := mSig
     mH = mSig
-    mCs = np.kron(mC, mC)
-    mDs = np.kron(mD, mD)
 
-    _, mL = np.linalg.eig(mCs + mDs)
-    vL1 = np.diag(mL)
-    _, mL = np.linalg.eig(mK)
-    vL2 = np.diag(mL)
+    # This depends on the initial vals of mSig
+    # print(np.linalg.eigvals(mK))
+    # print(np.linalg.eigvals(mH))
 
-    iL = (abs(vL1) > 1).sum() + (abs(vL2) > 1).sum()
-    if iL > 0:
-        ll = -1e+16
-    else:
-        ll = -0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
-            np.inner(mU[0], np.linalg.solve(mH, mU[0].T))
-        for t in range(1, iT):
-            mH = mK + \
-                np.dot(
-                    np.dot(mC, np.outer(mU[t-1], mU[t-1])), mC) + np.dot(np.dot(mD, mH), mD)
-            _, mLam = np.linalg.eig(mH)
-            if min(np.diag(mLam)) < 0:
-                ll = ll - 1e+16
-                break
+    # H_t is positive definite if K and H_0 are
+    if np.any(np.linalg.eigvals(mK) <= 0):
+        return 1e+16
+    if np.any(np.linalg.eigvals(mH) <= 0):
+        return 1e+16
 
-            ll = ll - 0.5 * math.log(np.linalg.det(mH)) - 0.5 * \
-                np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
-        
-    iC = -0.5 * iN * math.log(2 * math.pi)
-    ll += iT * iC
-    obj = -ll / iT
-    if abs(np.imag(obj)) > 0:
-        obj = 1e+16
-        
-    return obj
+    ll = 0
+    for t in range(iT):
+        # Equation (22)
+        ll -= math.log(np.linalg.det(mH)) - \
+            np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
+
+        # Equation (17)
+        mH = mK + \
+            np.dot(np.dot(mC, np.outer(mU[t], mU[t])), mC) + \
+            np.dot(np.dot(mD, mH), mD)
+
+        # check if H_t is not positive definite
+        vLam = np.linalg.eigvals(mH)
+        if min(vLam) <= 0:
+            return 1e+16
+
+        # check if det(mH) == 0 (linearly dependent)
+        if np.linalg.det(mH) < 1e-12:
+            # the next computation of log(det(mH)) will cause ValueError
+            # since log(0) is undefined
+            return 1e+16
+
+    ll -= iN * iT * math.log(2 * math.pi)
+    ll *= 0.5
+    if abs(np.imag(ll)) > 0:
+        return 1e+16
+
+    # maximizing f(x) <=> minimizing -f(x)
+    print("obj func runs successfully")
+    return -ll

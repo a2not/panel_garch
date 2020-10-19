@@ -4,8 +4,9 @@ import numpy as np
 
 
 def vech(mX):
+    # take vech operation on d*d symmetric matrix and return (d*(d+1) / 2) dimension column vecto
     n, check = mX.shape
-    assert n == check, "vech with non-symmetric matrix"
+    assert n == check, "vech operation on a non-symmetric matrix"
 
     vH = np.zeros(((n * (n + 1)) // 2, 1))
     writer = 0
@@ -25,10 +26,12 @@ def test_vech(mX):
     print(res)
     print()
 
-# test
-test_vech(np.ones((3, 3)))
-test_vech(np.array([[1, 2, 3],
-                   [2, 4, 2],
-                   [3, 21, 8]]))
-# fail case; non-symetric
-# test_vech(np.ones((2, 3)))
+
+if __name__ == "__main__":
+    # test
+    test_vech(np.ones((3, 3)))
+    test_vech(np.array([[1, 2, 3],
+                        [2, 4, 2],
+                        [3, 21, 8]]))
+    # fail case; non-symetric
+    # test_vech(np.ones((2, 3)))
