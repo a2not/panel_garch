@@ -6,7 +6,7 @@ import math
 
 def Obj_pg(iN, iT, vLambda, mU, mSig):
     assert vLambda.shape == (4,), "vLambda not size (4,)"
-    assert mU.shape == (iT, iN, 1), "mU not size (iT, iN, 1)"
+    assert mU.shape == (iT, iN), "mU not size (iT, iN)"
     assert mSig.shape == (iN, iN), "mSig not size (iN, iN)"
     gam, rho, varphi, eta = vLambda
 
@@ -56,9 +56,9 @@ def Obj_pg(iN, iT, vLambda, mU, mSig):
 
     ll -= iN * iT * math.log(2 * math.pi)
     ll *= 0.5
-    if abs(np.imag(ll)) > 0:
+    if abs(np.imag(ll)).any() > 0:
         return 1e+16
 
     # maximizing f(x) <=> minimizing -f(x)
-    print("obj func runs successfully")
+    print("obj func runs successfully: dtype of f() = ", type(-ll), ll.shape)
     return -ll
