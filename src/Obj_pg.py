@@ -6,7 +6,7 @@ import math
 
 def Obj_pg(iN, iT, vLambda, mU, mSig):
     assert vLambda.shape == (4,), "vLambda not size (4,)"
-    assert mU.shape == (iT, iN), "mU not size (iT, iN)"
+    assert mU.shape == (iT, iN, 1), "mU not size (iT, iN, 1)"
     assert mSig.shape == (iN, iN), "mSig not size (iN, iN)"
     gam, rho, varphi, eta = vLambda
 
