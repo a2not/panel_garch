@@ -147,17 +147,17 @@ class panel_garch:
 
             # constraints: Assumption 5
             # the spectrum radius of kron(C, C) + kron(D, D) <= 1
-            # assumptions = scipy.optimize.NonlinearConstraint(
-            #     fun=self.spectralRadiusOfKroneckers,
-            #     lb=np.array(-np.inf),
-            #     ub=np.array(1)
-            # )
+            assumptions = scipy.optimize.NonlinearConstraint(
+                fun=self.spectralRadiusOfKroneckers,
+                lb=-np.inf,
+                ub=1
+            )
             result = scipy.optimize.minimize(
                 fun=self.Obj_pg,
                 x0=vLambda_ini,
                 args=(mU, mSig_h),
-                bounds=scipy.optimize.Bounds(lb, ub)
-                # constraints=assumptions
+                bounds=scipy.optimize.Bounds(lb, ub),
+                constraints=assumptions
             )
 
             if debug_print:

@@ -1,7 +1,7 @@
 import numpy as np
 
 def spectralRadiusOfKroneckers(iN, vLambda):
-    assert vLambda.shape == (4, 1), "vLambda not size (4, 1)"
+    assert vLambda.shape == (4,), "vLambda not size (4,)"
     gam, rho, varphi, eta = vLambda
 
     # Definition (13)

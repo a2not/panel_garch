@@ -49,7 +49,7 @@ def Obj_pg(iN, iT, vLambda, mU, mSig):
             return 1e+16
 
         # check if det(mH) == 0 (linearly dependent)
-        if np.linalg.det(mH) < 1e-12:
+        if np.linalg.det(mH) <= 0:
             # the next computation of log(det(mH)) will cause ValueError
             # since log(0) is undefined
             return 1e+16
@@ -60,5 +60,5 @@ def Obj_pg(iN, iT, vLambda, mU, mSig):
         return 1e+16
 
     # maximizing f(x) <=> minimizing -f(x)
-    print("obj func runs successfully: dtype of f() = ", type(-ll), ll.shape)
+    print("obj func runs successfully: f() = ", -ll)
     return -ll
