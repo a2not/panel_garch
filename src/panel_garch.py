@@ -127,17 +127,17 @@ class panel_garch:
                 mQ += np.dot(mQ1.T, mQ1)
                 vQ += np.dot(mQ1.T, mYt[:, i])
 
-            vTheta_h = np.linalg.solve(mQ, vQ)
+            vTheta_h = np.resize(np.linalg.solve(mQ, vQ), (2, 1))
             mZbb = np.reshape(mZb, (self.iN, 2))
 
-            vAlpha_h = vYb.T - np.dot(mZbb, vTheta_h)
-            mU = np.zeros((self.iT, self.iN))
+            vAlpha_h = vYb - np.dot(mZbb, vTheta_h)
+            mU = np.zeros((self.iT, self.iN, 1))
 
-            for i in range(self.iN):
-                mZi = np.reshape(mZ[:, :, i], (self.iT, 2))
-                mU[:, i] = mY0[:, i] - vAlpha_h[i] - np.dot(mZi, vTheta_h)
+            for i in range(self.iT):
+                mZi = np.reshape(mZ[i], (self.iN, 2))
+                mU[i] = mY0[i] - vAlpha_h - np.dot(mZi, vTheta_h)
 
-            mSig_h = (1 / self.iT) * np.dot(mU.T, mU)
+            mSig_h = (1 / self.iT) * np.dot(np.resize(mU, (self.iT, self.iN)).T, np.resize(mU, (self.iT, self.iN)))
             vSig_h = self.vech(mSig_h)
 
             # bound on parameters x
