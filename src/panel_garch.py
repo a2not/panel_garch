@@ -134,8 +134,7 @@ class panel_garch:
             mU = np.zeros((self.iT, self.iN, 1))
 
             for i in range(self.iT):
-                mZi = np.reshape(mZ[i], (self.iN, 2))
-                mU[i] = mY0[i] - vAlpha_h - np.dot(mZi, vTheta_h)
+                mU[i] = mY0[i] - vAlpha_h - np.dot(mZ[i], vTheta_h)
 
             mSig_h = (1 / self.iT) * np.dot(np.resize(mU, (self.iT, self.iN)).T, np.resize(mU, (self.iT, self.iN)))
             vSig_h = self.vech(mSig_h)
