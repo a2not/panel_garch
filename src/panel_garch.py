@@ -162,10 +162,6 @@ class panel_garch:
 
             if debug_print:
                 print(result)
-
-                if -self.iT * result.fun < -1e05:
-                    print("-self.iT * result.fun == ", -self.iT *
-                          result.fun, " < -1e05;  xyzxyzxyzxyzxyzxyzxyzxyzxyz")
                 print("______________________________________________________")
 
             vLambda_h = result.x
@@ -173,6 +169,7 @@ class panel_garch:
                 (vTheta_h.T, vAlpha_h.T, vSig_h.T, vLambda_h.T),
                 axis=None
             ))
+            vLambda_ini = vLambda_h
 
         mR = np.array(mR)
         print("Took {:.2f} s to complete".format(time.time() - start))
