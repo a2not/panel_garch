@@ -83,8 +83,6 @@ class panel_garch:
 
     def run(self, debug_print=False, DGP=True):
         mR = []
-        vLambda_ini = self.vLambda
-
         start = time.time()
 
         for j in range(self.iR):
@@ -128,14 +126,14 @@ class panel_garch:
                 mQ += np.dot(mQ1.T, mQ1)
                 vQ += np.dot(mQ1.T, mYt[:, i])
 
-            vTheta_h = np.linalg.solve(mQ, vQ)
+            self.vTheta = np.linalg.solve(mQ, vQ)
             mZbb = np.reshape(mZb, (self.iN, 2))
 
-            vAlpha_h = vYb - np.dot(mZbb, vTheta_h)
+            self.vAlpha = vYb - np.dot(mZbb, self.vTheta)
             mU = np.zeros((self.iT, self.iN))
 
             for i in range(self.iT):
-                mU[i] = mY0[i] - vAlpha_h - np.dot(mZ[i], vTheta_h)
+                mU[i] = mY0[i] - self.vAlpha - np.dot(mZ[i], self.vTheta)
 
             mSig_h = (1 / self.iT) * np.dot(mU.T, mU)
             vSig_h = self.vech(mSig_h)
@@ -154,7 +152,7 @@ class panel_garch:
             )
             result = scipy.optimize.minimize(
                 fun=self.Obj_pg,
-                x0=vLambda_ini,
+                x0=self.vLambda,
                 args=(mU, mSig_h),
                 bounds=scipy.optimize.Bounds(lb, ub),
                 constraints=assumptions
@@ -164,12 +162,11 @@ class panel_garch:
                 print(result)
                 print("______________________________________________________")
 
-            vLambda_h = result.x
+            self.vLambda = result.x
             mR.append(np.concatenate(
-                (vTheta_h.T, vAlpha_h.T, vSig_h.T, vLambda_h.T),
+                (self.vTheta.T, self.vAlpha.T, vSig_h.T, self.vLambda.T),
                 axis=None
             ))
-            vLambda_ini = vLambda_h
 
         mR = np.array(mR)
         print("Took {:.2f} s to complete".format(time.time() - start))
