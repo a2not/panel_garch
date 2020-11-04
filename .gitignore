@@ -4,3 +4,4 @@ __pycache__/
 # test dataset and results
 inflation_ratesG7.xlsx
 res.out
+stats.out
