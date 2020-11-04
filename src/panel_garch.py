@@ -175,4 +175,14 @@ class panel_garch:
         with open('res.out', 'w') as f:
             f.write(np.array2string(mR, separator=',', formatter={
                     'float_kind': lambda x: "\t%.2f" % x}))
-        # np.savetxt('test.out', mR, fmt='%.2f\t')
+
+        self.vPsi = np.concatenate(
+            (self.vTheta, self.vAlpha, self.vSigma, self.vLambda), axis=0)
+        # sample mean, sample sd, MSE (mean square error)
+        # [vPsi mean(mR)' sqrt(var(mR))' sqrt(mean((mR-ones(iR,1)*vPsi').^2))']
+        stats = np.concatenate(
+            (self.vPsi, np.mean(mR, axis=0), np.sqrt(np.var(mR, axis=0))), axis=0
+        )
+        with open('stats.out', 'w') as f:
+            f.write(np.array2string(stats, separator=',', formatter={
+                    'float_kind': lambda x: "\t%.2f" % x}))
