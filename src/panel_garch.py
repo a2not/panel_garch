@@ -4,7 +4,7 @@ import time
 import math
 import random
 import scipy.optimize
-from . import unvech, vech, Obj_pg, DGP, radius
+from . import unvech, vech, Obj_pg, DGP, radius, posdef
 
 
 class panel_garch:
@@ -75,6 +75,9 @@ class panel_garch:
     def spectralRadiusOfKroneckers(self, vLambda):
         return radius.spectralRadiusOfKroneckers(self.iN, vLambda)
 
+    def initialPositiveDefiniteness(self, vLambda):
+        return posdef.initialPositiveDefiniteness(self.iN, vLambda, self.mSig_h)
+
     def DataGeneratingProcess(self, iI=0, df=None):
         return DGP.DGP(self.vTheta, self.vAlpha, self.vSigma, self.vLambda, self.iT, self.iN, iI, df)
 
@@ -135,8 +138,9 @@ class panel_garch:
             for i in range(self.iT):
                 mU[i] = mY0[i] - self.vAlpha - np.dot(mZ[i], self.vTheta)
 
-            mSig_h = (1 / self.iT) * np.dot(mU.T, mU)
-            vSig_h = self.vech(mSig_h)
+            print(np.dot(mU.T, mU))
+            self.mSig_h = (1 / self.iT) * np.dot(mU.T, mU)
+            vSig_h = self.vech(self.mSig_h)
 
             # bound on parameters x
             iC = 1 - 1e-6
@@ -145,15 +149,23 @@ class panel_garch:
 
             # constraints: Assumption 5
             # the spectrum radius of kron(C, C) + kron(D, D) <= 1
-            assumptions = scipy.optimize.NonlinearConstraint(
+            assumptions = []
+            assumptions.append(scipy.optimize.NonlinearConstraint(
                 fun=self.spectralRadiusOfKroneckers,
                 lb=-np.inf,
                 ub=1
-            )
+            ))
+            # In the BEKK model, H_t is positive definite if K and H_0 are
+            assumptions.append(scipy.optimize.NonlinearConstraint(
+                fun=self.initialPositiveDefiniteness,
+                lb=1e-10,
+                ub=np.inf
+            ))
             result = scipy.optimize.minimize(
                 fun=self.Obj_pg,
                 x0=self.vLambda,
-                args=(mU, mSig_h),
+                args=(mU, self.mSig_h),
+                method='SLSQP',
                 bounds=scipy.optimize.Bounds(lb, ub),
                 constraints=assumptions
             )

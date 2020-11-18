@@ -22,35 +22,17 @@ def Obj_pg(iN, iT, vLambda, mU, mSig):
     # H_0 := mSig
     mH = mSig
 
-    # This depends on the initial vals of mSig
-    # print(np.linalg.eigvals(mK))
-    # print(np.linalg.eigvals(mH))
-
     ll = 0
-    # H_t is positive definite if K and H_0 are
-    if np.any(np.linalg.eigvals(mK) <= 0) or np.any(np.linalg.eigvals(mH) <= 0):
-        ll = -1e+16
-    else:
-        for t in range(iT):
-            # Equation (22)
-            ll -= math.log(np.linalg.det(mH)) - \
-                np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
+    for t in range(iT):
+        # Equation (22)
+        # print(np.linalg.det(mH))
+        ll -= math.log(np.linalg.det(mH)) + \
+            np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
 
-            # Equation (17)
-            mH = mK + \
-                np.dot(np.dot(mC, np.outer(mU[t], mU[t])), mC) + \
-                np.dot(np.dot(mD, mH), mD)
-
-            # check if H_t is not positive definite
-            vLam = np.linalg.eigvals(mH)
-            if min(vLam) < 0:
-                return 1e+10 - ll
-
-            # check if det(mH) == 0 (linearly dependent)
-            if np.linalg.det(mH) <= 0:
-                # the next computation of log(det(mH)) will cause ValueError
-                # since log(0) is undefined
-                return 1e+10 - ll
+        # Equation (17)
+        mH = mK + \
+            np.dot(np.dot(mC, np.outer(mU[t], mU[t])), mC) + \
+            np.dot(np.dot(mD, mH), mD)
 
     ll -= iN * iT * math.log(2 * math.pi)
     ll *= 0.5
