@@ -1,4 +1,4 @@
 run:
-	python main.py
+	python3 main.py
 
 .PHONY: run
