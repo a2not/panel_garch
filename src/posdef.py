@@ -16,4 +16,6 @@ def initialPositiveDefiniteness(iN, vLambda, mSig):
 
     # H_0 := mSig
     # H_t is positive definite if K and H_0 are
-    return abs(np.linalg.det(mK)) * abs(np.linalg.det(mSig))
+    print("eval: ", vLambda)
+    return min(min(np.linalg.eigvals(mK)), min(np.linalg.eigvals(mSig)))
+
