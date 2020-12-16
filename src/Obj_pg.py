@@ -25,8 +25,8 @@ def Obj_pg(iN, iT, vLambda, mU, mSig):
     ll = 0
     for t in range(iT):
         # Equation (22)
-        # if np.linalg.det(mH) < 1e-9 :
-            # return 1e10 - ll
+        if np.linalg.det(mH) < 1e-9 :
+            return 1e10 - ll
         ll -= math.log(np.linalg.det(mH)) + \
             np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
 
@@ -38,8 +38,8 @@ def Obj_pg(iN, iT, vLambda, mU, mSig):
     ll -= iN * iT * math.log(2 * math.pi)
     ll *= 0.5
     if abs(np.imag(ll)) > 0:
-        return 1e+5 - ll
+        return 1e5 - ll
 
     # maximizing f(x) <=> minimizing -f(x)
-    print("obj func runs successfully: f() = ", -ll)
+    # print("obj func runs successfully: f() = ", -ll)
     return -ll

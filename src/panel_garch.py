@@ -156,7 +156,6 @@ class panel_garch:
             for i in range(self.iT):
                 mU[i] = mY0[i] - self.vAlpha - np.dot(mZ[i], self.vTheta)
 
-            print(np.dot(mU.T, mU))
             self.mSig_h = (1 / self.iT) * np.dot(mU.T, mU)
             vSig_h = self.vech(self.mSig_h)
 
@@ -187,7 +186,7 @@ class panel_garch:
                 x0=self.vLambda,
                 # args=(mU, self.mSig_h),
                 method='SLSQP',
-                jac=self.gradient_respecting_bounds(bounds=bounds, fun=self.objfunc(mU, self.mSig_h)),
+                # jac=self.gradient_respecting_bounds(bounds=bounds, fun=self.objfunc(mU, self.mSig_h)),
                 bounds=bounds,
                 constraints=assumptions
             )
