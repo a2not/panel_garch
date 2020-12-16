@@ -202,8 +202,8 @@ class panel_garch:
             ))
 
         mR = np.array(mR)
-        print("Took {:.2f} s to complete".format(time.time() - start))
 
+        # writing mR to ./res.out
         np.set_printoptions(threshold=np.inf, linewidth=np.inf)
         with open('res.out', 'w') as f:
             f.write(np.array2string(mR, separator=',', formatter={
@@ -211,11 +211,20 @@ class panel_garch:
 
         self.vPsi = np.concatenate(
             (self.vTheta, self.vAlpha, self.vSigma, self.vLambda), axis=0)
-        # sample mean, sample sd, MSE (mean square error)
+
+        # writing stats to ./stats.out
+        # parameters, sample mean, sample sd, MSE (mean square error)
         # [vPsi mean(mR)' sqrt(var(mR))' sqrt(mean((mR-ones(iR,1)*vPsi').^2))']
+        sampleMean = np.mean(mR, axis=0)
+        sampleSd = np.sqrt(np.var(mR, axis=0))
+        meanDiff = np.mean(mR - np.outer(np.ones((self.iR, 1)), self.vPsi), axis=0)
+        MSE = np.array([np.sqrt(np.dot(meanDiff.T, meanDiff))])
         stats = np.concatenate(
-            (self.vPsi, np.mean(mR, axis=0), np.sqrt(np.var(mR, axis=0))), axis=0
+            (self.vPsi, sampleMean, sampleSd, MSE)
         )
+        print("stats.out shape: ", stats.shape)
         with open('stats.out', 'w') as f:
             f.write(np.array2string(stats, separator=',', formatter={
                     'float_kind': lambda x: "\t%.2f" % x}))
+
+        print("Took {:.2f} s to complete".format(time.time() - start))
