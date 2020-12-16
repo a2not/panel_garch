@@ -83,6 +83,24 @@ class panel_garch:
 
     def Obj_pg(self, vLambda, mU, mSig):
         return Obj_pg.Obj_pg(self.iN, self.iT, vLambda, mU, mSig)
+    
+    def objfunc(self, mU, mSig):
+        def objective_function(x):
+            return Obj_pg.Obj_pg(self.iN, self.iT, x, mU, mSig)
+        return objective_function
+
+    # https://stackoverflow.com/questions/52208363/scipy-minimize-violates-given-bounds
+    def gradient_respecting_bounds(self, bounds, fun, eps=1e-8):
+        """bounds: list of tuples (lower, upper)"""
+        def gradient(x):
+            fx = fun(x)
+            grad = np.zeros(len(x))
+            for k in range(len(x)):
+                d = np.zeros(len(x))
+                d[k] = eps if x[k] + eps <= bounds[k][1] else -eps
+                grad[k] = (fun(x + d) - fx) / d[k]
+            return grad
+        return gradient
 
     def run(self, debug_print=False, DGP=True):
         mR = []
@@ -144,8 +162,10 @@ class panel_garch:
 
             # bound on parameters x
             iC = 1 - 1e-6
-            lb = np.full(4, -iC)
-            ub = np.full(4, iC)
+            # lb = np.full(4, -iC)
+            # ub = np.full(4, iC)
+            # bounds = scipy.optimize.Bounds(lb, ub)
+            bounds = tuple([(-iC, iC) for _ in range(4)])
 
             # constraints: Assumption 5
             # the spectrum radius of kron(C, C) + kron(D, D) <= 1
@@ -162,11 +182,13 @@ class panel_garch:
                 ub=np.inf
             ))
             result = scipy.optimize.minimize(
-                fun=self.Obj_pg,
+                # fun=self.Obj_pg,
+                fun=self.objfunc(mU, self.mSig_h),
                 x0=self.vLambda,
-                args=(mU, self.mSig_h),
+                # args=(mU, self.mSig_h),
                 method='SLSQP',
-                bounds=scipy.optimize.Bounds(lb, ub),
+                jac=self.gradient_respecting_bounds(bounds=bounds, fun=self.objfunc(mU, self.mSig_h)),
+                bounds=bounds,
                 constraints=assumptions
             )
 

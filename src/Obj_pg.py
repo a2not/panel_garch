@@ -25,7 +25,8 @@ def Obj_pg(iN, iT, vLambda, mU, mSig):
     ll = 0
     for t in range(iT):
         # Equation (22)
-        # print(np.linalg.det(mH))
+        # if np.linalg.det(mH) < 1e-9 :
+            # return 1e10 - ll
         ll -= math.log(np.linalg.det(mH)) + \
             np.inner(mU[t], np.linalg.solve(mH, mU[t].T))
 
