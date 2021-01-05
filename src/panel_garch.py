@@ -222,7 +222,6 @@ class panel_garch:
         stats = np.concatenate(
             (self.vPsi, sampleMean, sampleSd, MSE)
         )
-        print("stats.out shape: ", stats.shape)
         with open('stats.out', 'w') as f:
             f.write(np.array2string(stats, separator=',', formatter={
                     'float_kind': lambda x: "\t%.2f" % x}))
