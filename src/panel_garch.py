@@ -214,7 +214,6 @@ class panel_garch:
 
         # writing stats to ./stats.out
         # parameters, sample mean, sample sd, MSE (mean square error)
-        # [vPsi mean(mR)' sqrt(var(mR))' sqrt(mean((mR-ones(iR,1)*vPsi').^2))']
         sampleMean = np.mean(mR, axis=0)
         sampleSd = np.sqrt(np.var(mR, axis=0))
         meanDiff = np.mean(mR - np.outer(np.ones((self.iR, 1)), self.vPsi), axis=0)
@@ -223,7 +222,39 @@ class panel_garch:
             (self.vPsi, sampleMean, sampleSd, MSE)
         )
         with open('stats.out', 'w') as f:
-            f.write(np.array2string(stats, separator=',', formatter={
-                    'float_kind': lambda x: "\t%.2f" % x}))
+            f.write("vTheta:\n")
+            f.write(np.array2string(self.vTheta, separator=',', formatter={
+                    'float_kind': lambda x: "\t%.6f" % x}))
+            f.write("\n")
+            f.write("vAlpha:\n")
+            f.write(np.array2string(self.vAlpha, separator=',', formatter={
+                    'float_kind': lambda x: "\t%.6f" % x}))
+            f.write("\n")
+            f.write("vSigma:\n")
+            f.write(np.array2string(self.vSigma, separator=',', formatter={
+                    'float_kind': lambda x: "\t%.6f" % x}))
+            f.write("\n")
+            f.write("vLambda:\n")
+            f.write(np.array2string(self.vLambda, separator=',', formatter={
+                    'float_kind': lambda x: "\t%.6f" % x}))
+            f.write("\n")
+
+            f.write("sample mean:\n")
+            f.write(np.array2string(sampleMean, separator=',', formatter={
+                    'float_kind': lambda x: "\t%.6f" % x}))
+            f.write("\n")
+
+            f.write("sample sd:\n")
+            f.write(np.array2string(sampleSd, separator=',', formatter={
+                    'float_kind': lambda x: "\t%.6f" % x}))
+            f.write("\n")
+
+            f.write("MSE:\n")
+            f.write(np.array2string(MSE, separator=',', formatter={
+                    'float_kind': lambda x: "\t%.6f" % x}))
+            f.write("\n")
+
+            # f.write(np.array2string(stats, separator=',', formatter={
+            #         'float_kind': lambda x: "\t%.6f" % x}))
 
         print("Took {:.2f} s to complete".format(time.time() - start))
