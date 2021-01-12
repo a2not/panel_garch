@@ -51,6 +51,8 @@ class panel_garch:
         assert self.vSigma.shape == (
             self.iN * (self.iN + 1) // 2,), "vSigma not size (iN * (iN + 1) // 2,)"
 
+        print("initial vS", self.vS)
+
         if initial_vLambda == None:
             self.vLambda = np.array([0.4, -0.1, 0.6, -0.2])
         else:
@@ -209,17 +211,17 @@ class panel_garch:
             f.write(np.array2string(mR, separator=',', formatter={
                     'float_kind': lambda x: "\t%.2f" % x}))
 
-        self.vPsi = np.concatenate(
-            (self.vTheta, self.vAlpha, self.vSigma, self.vLambda), axis=0)
+        # self.vPsi = np.concatenate(
+        #    (self.vTheta, self.vAlpha, self.vSigma, self.vLambda), axis=0)
 
         # writing stats to ./stats.out
         # parameters, sample mean, sample sd, MSE (mean square error)
         sampleMean = np.mean(mR, axis=0)
         sampleSd = np.sqrt(np.var(mR, axis=0))
-        meanDiff = np.mean(mR - np.outer(np.ones((self.iR, 1)), self.vPsi), axis=0)
-        MSE = np.array([np.sqrt(np.dot(meanDiff.T, meanDiff))])
+        meanDiffSq = np.power(mR - np.outer(np.ones((self.iR, 1)), self.vPsi), 2)
+        MSE = np.mean(meanDiffSq, axis=0)
         stats = np.concatenate(
-            (self.vPsi, sampleMean, sampleSd, MSE)
+           (self.vPsi, sampleMean, sampleSd, MSE)
         )
         with open('stats.out', 'w') as f:
             f.write("vTheta:\n")
